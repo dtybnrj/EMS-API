@@ -12,6 +12,7 @@
 	<groupId>com.aditya</groupId>
 	<artifactId>EMS-api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>war</packaging>
 	<name>EMS-api</name>
 	<description>Demo project for employee management system</description>
 	<properties>
