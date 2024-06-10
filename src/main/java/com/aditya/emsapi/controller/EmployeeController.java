@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.aditya.emsapi.model.Employee;
 import com.aditya.emsapi.services.EmployeeServiceImpl;
 
-@CrossOrigin(origins = "http://localhost:3000/")
+@CrossOrigin(origins = "http://localhost:3000/ http://192.168.1.5/")
 @RestController
 @RequestMapping("/api/v1/")
 public class EmployeeController {
