@@ -5,9 +5,12 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.aditya.emsapi.model.EMSUser;
 import com.aditya.emsapi.model.Employee;
+import com.aditya.emsapi.repository.EMSUserRepo;
 import com.aditya.emsapi.repository.EmployeeRepository;
 
 
@@ -17,13 +20,31 @@ public class EmployeeServiceImpl implements EmployeeService{
 	@Autowired
 	private EmployeeRepository emplRepo;
 
+	@Autowired
+	private EMSUserRepo emsUserRepo;
+
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+
 	public Employee createEmployee(Employee empl) {
 		
 		EmployeeEntity emplEnt = new EmployeeEntity();
 		
 		BeanUtils.copyProperties(empl, emplEnt);
-		
+		emplEnt.setIsFirstTimeLogin(true);
 		emplRepo.save(emplEnt);
+
+		EMSUser emsUser = new EMSUser();
+		emsUser.setEmail(empl.getEmailId());
+		String pswd = RandomCodeGenerator.generateRandomCode();
+		String encodedPassWord = passwordEncoder.encode(pswd);
+
+		emsUser.setPassword(encodedPassWord);
+		emsUser.setName(empl.getFirstName() + " " + empl.getLastName());
+		emsUser.setRole("EMP");
+		emsUserRepo.save(emsUser);
+
+		empl.setRandomGeneratedPassword(pswd);
 		
 		return empl;
 	}
@@ -34,7 +55,7 @@ public class EmployeeServiceImpl implements EmployeeService{
 				.map(emp-> new Employee(emp.getId(),
 				emp.getFirstName(),
 				emp.getLastName(),
-				emp.getEmailId()))
+				emp.getEmailId(),null))
 				.collect(Collectors.toList());
 		return empl;
 	}

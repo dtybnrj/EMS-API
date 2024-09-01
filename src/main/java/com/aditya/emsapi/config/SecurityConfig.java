@@ -21,71 +21,80 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.aditya.emsapi.services.EMSUserDetailsService;
 
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-	
+
     @Autowired
     private EMSUserDetailsService emsUserDetailsService;
+
     @Autowired
     private JWTAuthFilter jwtAuthFilter;
 
+    /**
+     * Configures CORS settings, allowing cross-origin requests.
+     */
     @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("http://localhost:3000/");
+        config.setAllowedOrigins(List.of("http://localhost:3000")); // Allow multiple origins dynamically if needed
         config.addAllowedHeader("*");
-        config.addAllowedMethod("GET");
-        config.addAllowedMethod("POST");
-        config.addAllowedMethod("PUT");
-        config.addAllowedMethod("DELETE");
-        config.addAllowedMethod("OPTIONS");
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
 
+    /**
+     * Configures the security filter chain to handle authentication, session management,
+     * and request authorization.
+     */
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception{
-        // httpSecurity.csrf(AbstractHttpConfigurer::disable)
-        //         .cors(c -> c.configurationSource(corsConfigurationSource()))
-        //         .authorizeHttpRequests(request -> request
-        //                 .requestMatchers("/auth/**").permitAll()
-        //                 .requestMatchers("/admin/**").hasAnyAuthority("ADMIN")
-        //                 .requestMatchers("/emp/**").hasAnyAuthority("EMPLOYEE")
-        //                 .requestMatchers("/adminuser/**").hasAnyAuthority("ADMIN", "EMPLOYEE")
-        //                 .anyRequest().authenticated())
-        //         .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        //         .authenticationProvider(authenticationProvider()).addFilterBefore(
-        //         jwtAuthFilter, UsernamePasswordAuthenticationFilter.class
-        // );
-        httpSecurity
-    .csrf(AbstractHttpConfigurer::disable).cors(c -> c.configurationSource(corsConfigurationSource()))
-    .authorizeHttpRequests(request -> request
-    .requestMatchers("/auth/**").permitAll()
-    .requestMatchers("/api/**").hasAnyAuthority("ADMIN")
-        .anyRequest().authenticated()).sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authenticationProvider(authenticationProvider()).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-        return httpSecurity.build();
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        return httpSecurity
+            .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for stateless JWT-based security
+            .cors(c -> c.configurationSource(corsConfigurationSource())) // Apply CORS settings
+            .authorizeHttpRequests(request -> request
+                .requestMatchers("/auth/**").permitAll() // Publicly accessible paths
+                .requestMatchers("/api/v1/**").hasAuthority("ROLE_ADMIN") // Admin routes require ADMIN authority
+                .requestMatchers("/emp/**").hasAuthority("EMPLOYEE") // Employee routes require EMPLOYEE authority
+                .requestMatchers("/adminuser/**").hasAnyAuthority("ADMIN", "EMPLOYEE") // Accessible to both roles
+                .anyRequest().authenticated() // All other paths require authentication
+            )
+            .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session management
+            .authenticationProvider(authenticationProvider()) // Custom authentication provider
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class) // JWT filter before username/password authentication
+            .build();
     }
 
+    /**
+     * Provides the authentication provider for the application,
+     * using EMSUserDetailsService and BCryptPasswordEncoder.
+     */
     @Bean
-    AuthenticationProvider authenticationProvider(){
+    public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
         daoAuthenticationProvider.setUserDetailsService(emsUserDetailsService);
-        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
+        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder()); // BCryptPasswordEncoder for password hashing
         return daoAuthenticationProvider;
     }
 
+    /**
+     * Password encoder bean using BCrypt.
+     */
     @Bean
-    PasswordEncoder passwordEncoder(){
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Provides the authentication manager by using the default Spring Security configuration.
+     */
     @Bean
-    AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception{
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
-
 }

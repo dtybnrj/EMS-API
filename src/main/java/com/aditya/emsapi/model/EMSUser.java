@@ -1,8 +1,13 @@
 package com.aditya.emsapi.model;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.Entity;
@@ -28,8 +33,10 @@ public class EMSUser implements UserDetails {
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
-		// TODO Auto-generated method stub
-		return null;
+		GrantedAuthority authorities =new SimpleGrantedAuthority("ROLE_" + this.role);
+		List<GrantedAuthority> authoritiesSet = new ArrayList<>();
+		authoritiesSet.add(authorities);
+		return authoritiesSet;
 	}
 
 	@Override

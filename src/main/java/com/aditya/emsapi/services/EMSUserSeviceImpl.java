@@ -72,6 +72,14 @@ public class EMSUserSeviceImpl {
         }
         return response;
     }
+
+    public void logout(String token){
+
+        String jwtToken = token.substring(7);
+
+        jwtUtils.blacklistToken(jwtToken);
+
+    }
     
     public EMSUserReqRes getAllUsers() {
     	EMSUserReqRes reqRes = new EMSUserReqRes();

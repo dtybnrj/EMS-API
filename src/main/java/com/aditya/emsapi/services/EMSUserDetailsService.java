@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.aditya.emsapi.model.EMSUser;
 import com.aditya.emsapi.repository.EMSUserRepo;
 
 @Service
@@ -15,7 +16,7 @@ public class EMSUserDetailsService implements UserDetailsService {
 	private EMSUserRepo emsUserRepo;
 
 	@Override
-	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+	public EMSUser loadUserByUsername(String username) throws UsernameNotFoundException {
 		// TODO Auto-generated method stub
 		return emsUserRepo.findByEmail(username).orElseThrow();
 	}
