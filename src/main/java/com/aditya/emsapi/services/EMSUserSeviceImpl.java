@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.aditya.emsapi.model.EMSUser;
 import com.aditya.emsapi.repository.EMSUserRepo;
+import com.aditya.emsapi.repository.EmployeeRepository;
 import com.aditya.emsapi.view.EMSUserReqRes;
 
 @Service
@@ -24,6 +25,8 @@ public class EMSUserSeviceImpl {
 	private AuthenticationManager authenticationManager;
 	@Autowired
 	private PasswordEncoder passwordEncoder;
+    @Autowired
+    EmployeeRepository employeeRepository;
 	
 	
     public EMSUserReqRes register(EMSUserReqRes registrationRequest){
@@ -65,6 +68,13 @@ public class EMSUserSeviceImpl {
             response.setRefreshToken(refreshToken);
             response.setExpirationTime("24Hrs");
             response.setMessage("Successfully Logged In");
+            if(user.getRole().equals("EMP")){
+                var empUser = employeeRepository.findByEmailId(user.getEmail());
+
+                if(empUser.get().getIsFirstTimeLogin()){
+                    response.setIsFirstTimeLogin(true);
+                }
+            }
 
         }catch (Exception e){
             response.setStatusCode(500);

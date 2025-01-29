@@ -26,5 +26,6 @@ public class EMSUserReqRes {
     private String password;
     private EMSUser emsUsers;
     private List<EMSUser> emsUsersList;
+    private Boolean isFirstTimeLogin = false;
 
 }
