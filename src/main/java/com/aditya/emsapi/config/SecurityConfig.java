@@ -19,7 +19,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.aditya.emsapi.services.EMSUserDetailsService;
+import com.aditya.emsapi.services.CustomUserDetailsService;
 
 import java.util.List;
 
@@ -28,7 +28,7 @@ import java.util.List;
 public class SecurityConfig {
 
     @Autowired
-    private EMSUserDetailsService emsUserDetailsService;
+    private CustomUserDetailsService emsUserDetailsService;
 
     @Autowired
     private JWTAuthFilter jwtAuthFilter;
@@ -58,11 +58,10 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for stateless JWT-based security
             .cors(c -> c.configurationSource(corsConfigurationSource())) // Apply CORS settings
             .authorizeHttpRequests(request -> request
-                .requestMatchers("/auth/**").permitAll() // Publicly accessible paths
-                .requestMatchers("/api/v1/**").hasAuthority("ROLE_ADMIN") // Admin routes require ADMIN authority
-                .requestMatchers("/emp/**").hasAuthority("EMPLOYEE") // Employee routes require EMPLOYEE authority
-                .requestMatchers("/adminuser/**").hasAnyAuthority("ADMIN", "EMPLOYEE") // Accessible to both roles
-                .anyRequest().authenticated() // All other paths require authentication
+            .requestMatchers("/api/auth/**").permitAll()  // Public access to auth APIs
+            .requestMatchers("/api/employees/**").hasRole("ADMIN")  // Only ADMIN can access
+            .requestMatchers("/api/tasks/**", "/api/attendance/**", "/api/leaves/**").hasAnyRole("EMPLOYEE", "ADMIN")  // Both can access
+            .anyRequest().authenticated()
             )
             .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session management
             .authenticationProvider(authenticationProvider()) // Custom authentication provider

@@ -5,6 +5,7 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.function.Function;
 
 import javax.crypto.SecretKey;
@@ -14,7 +15,7 @@ import org.hibernate.mapping.Set;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import com.aditya.emsapi.model.EMSUser;
+import com.aditya.emsapi.model.User;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -34,16 +35,17 @@ public class JWTUtils {
 		this.Key = new SecretKeySpec(keyBytes, "HmacSHA256");
 	}
 	
-	public String generateToken(EMSUser userDetails){
+	public String generateToken(User userDetails, String role){
         return Jwts.builder()
                 .subject(userDetails.getEmail())
+                .claims(Map.of("role", role))
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(Key)
                 .compact();
     }
 	
-	public  String generateRefreshToken(HashMap<String, Object> claims, EMSUser userDetails){
+	public  String generateRefreshToken(HashMap<String, Object> claims, User userDetails){
         return Jwts.builder()
                 .claims(claims)
                 .subject(userDetails.getEmail())
@@ -61,9 +63,9 @@ public class JWTUtils {
         return claimsTFunction.apply(Jwts.parser().verifyWith(Key).build().parseSignedClaims(token).getPayload());
     }
 
-    public  boolean isTokenValid(String token, EMSUser userDetails){
+    public  boolean isTokenValid(String token, UserDetails userDetails){
         final String username = extractUsername(token);
-        return (username.equals(userDetails.getEmail()) && !isTokenExpired(token));
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
     public  boolean isTokenExpired(String token){

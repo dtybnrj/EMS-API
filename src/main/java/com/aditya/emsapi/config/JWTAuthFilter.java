@@ -11,8 +11,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.aditya.emsapi.model.EMSUser;
-import com.aditya.emsapi.services.EMSUserDetailsService;
+import com.aditya.emsapi.services.CustomUserDetailsService;
 import com.aditya.emsapi.services.JWTUtils;
 
 import jakarta.servlet.FilterChain;
@@ -27,7 +26,7 @@ public class JWTAuthFilter extends OncePerRequestFilter {
     private JWTUtils jwtUtils;
 
     @Autowired
-    private EMSUserDetailsService emsUserDetailsService;
+    private CustomUserDetailsService emsUserDetailsService;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -45,7 +44,7 @@ public class JWTAuthFilter extends OncePerRequestFilter {
 	        userEmail = jwtUtils.extractUsername(jwtToken);
 
 	        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null && !jwtUtils.isTokenBlacklisted(jwtToken)) {
-	            EMSUser userDetails = emsUserDetailsService.loadUserByUsername(userEmail);
+	            UserDetails userDetails = emsUserDetailsService.loadUserByUsername(userEmail);
 
 	            if (jwtUtils.isTokenValid(jwtToken, userDetails)) {
 	                SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
